@@ -564,6 +564,7 @@ static void cancel_delayed_block(CWDelayedBlockHandle delayedHandle)
         // add view to window
         UIView *rootView = self.notificationWindow.rootViewController.view;
         [rootView addSubview:self.customView];
+        [rootView bringSubviewToFront:self.customView];
         [self.notificationWindow setHidden:NO];
         
         // Add constraints to pin view to superview and handle rotation correctly
