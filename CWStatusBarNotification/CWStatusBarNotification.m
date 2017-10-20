@@ -311,8 +311,6 @@ static void cancel_delayed_block(CWDelayedBlockHandle delayedHandle)
 
 - (void)updateStatusBarFrame
 {
-    UIView *view = self.isCustomView ? self.customView : self.notificationLabel;
-    view.frame = [self getNotificationLabelFrame];
     self.statusBarView.hidden = YES;
 }
 
@@ -329,6 +327,7 @@ static void cancel_delayed_block(CWDelayedBlockHandle delayedHandle)
 {
     view.clipsToBounds = YES;
     view.userInteractionEnabled = YES;
+    [view setTranslatesAutoresizingMaskIntoConstraints:NO];
     [view addGestureRecognizer:self.tapGestureRecognizer];
     switch (self.notificationAnimationInStyle) {
         case CWNotificationAnimationStyleTop:
@@ -344,6 +343,24 @@ static void cancel_delayed_block(CWDelayedBlockHandle delayedHandle)
             view.frame = [self getNotificationLabelRightFrame];
             break;
     }
+}
+
+- (void)addConstraintsToNotificationView:(UIView *)view
+{
+    // Create constraints
+    UIView* container = self.notificationWindow.rootViewController.view;
+    
+    [container addConstraint:[NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual
+                                                             toItem:container attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0.0]];
+    
+    [container addConstraint:[NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual
+                                                             toItem:container attribute:NSLayoutAttributeTop multiplier:1.0 constant:0.0]];
+    
+    [container addConstraint:[NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeTrailing relatedBy:NSLayoutRelationEqual
+                                                             toItem:container attribute:NSLayoutAttributeTrailing multiplier:1.0 constant:0.0]];
+    
+    [container addConstraint:[NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual
+                                                             toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:[self getNotificationLabelHeight]]];
 }
 
 - (void)createNotificationLabelWithMessage:(NSString *)message
@@ -486,6 +503,9 @@ static void cancel_delayed_block(CWDelayedBlockHandle delayedHandle)
         [self.notificationWindow.rootViewController.view addSubview:self.notificationLabel];
         [self.notificationWindow.rootViewController.view bringSubviewToFront:self.notificationLabel];
         [self.notificationWindow setHidden:NO];
+        
+        // Add constraints to pin view to superview and handle rotation correctly
+        [self addConstraintsToNotificationView:self.notificationLabel];
 
         // checking for screen orientation change
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateStatusBarFrame) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
@@ -546,6 +566,9 @@ static void cancel_delayed_block(CWDelayedBlockHandle delayedHandle)
         [rootView addSubview:self.customView];
         [rootView bringSubviewToFront:self.customView];
         [self.notificationWindow setHidden:NO];
+        
+        // Add constraints to pin view to superview and handle rotation correctly
+        [self addConstraintsToNotificationView:self.customView];
 
         // checking for screen orientation change
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateStatusBarFrame) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
